@@ -1,0 +1,43 @@
+
+<div class="regioes-header">
+  <div class="title-and-button">
+    <h3>Regiões</h3>
+    <button mat-fab extended class="cadastrar-btn" (click)="navegarParaCadastro()">
+      <mat-icon>add</mat-icon>
+      Cadastrar
+    </button>
+  </div>
+</div>
+<table mat-table [dataSource]="dataSource">
+
+  <ng-container matColumnDef="nome">
+    <mat-header-cell *matHeaderCellDef > Nome da Região </mat-header-cell>
+    <mat-cell *matCellDef="let regiao"> {{regiao.nome}} </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="status">
+    <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
+    <mat-cell *matCellDef="let regiao">
+      {{ regiao.ativo ? 'Ativa' : 'Inativa' }}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="acoes">
+    <mat-header-cell *matHeaderCellDef> Ações </mat-header-cell>
+    <mat-cell *matCellDef="let regiao">
+      <mat-slide-toggle
+        [(ngModel)]="regiao.ativo"
+        (change)="toggleAtivo(regiao)">
+        {{ regiao.ativo ? 'Desativar' : 'Ativar' }}
+    </mat-slide-toggle>
+    <button mat-button class="edit" (click)="editarRegiao(regiao)">
+      <mat-icon>create</mat-icon>
+      Editar
+    </button>
+    </mat-cell>
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="colunasExibidas"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: colunasExibidas;"></mat-row>
+
+</table>

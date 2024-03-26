@@ -1,0 +1,40 @@
+<div class="regiao-cadastro-container">
+  <h3 class="pageTitle">Cadastro de Regiões</h3>
+      <form [formGroup]="regiaoForm" (ngSubmit)="onSubmit($event)">
+        <mat-form-field appearance="fill">
+          <mat-label>Nome da região</mat-label>
+          <input matInput formControlName="nome">
+          <mat-error *ngIf="regiaoForm.controls.nome.invalid">
+            Nome da região é obrigatório.
+          </mat-error>
+        </mat-form-field>
+        <br>
+        <div formArrayName="cidades" *ngFor="let cidade of cidades().controls; let i = index">
+          <div [formGroupName]="i">
+            <mat-form-field appearance="fill">
+              <mat-label>Cidade</mat-label>
+              <mat-select formControlName="cidade">
+                <mat-option *ngFor="let cidade of cidadesList" [value]="cidade.id">
+                  {{ cidade.nome }}/{{ cidade.uf }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <button mat-mini-fab color="warn" (click)="removerCidade(i)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+    
+        <button class="btnAdicionar" mat-stroked-button type="button" (click)="adicionarCidade()">
+          <mat-icon>add</mat-icon>
+          Adicionar cidade
+        </button>
+        <button  class="btnCancelar" mat-raised-button (click)="onCancel()">Cancelar</button>
+          <button class="btnSalvar" mat-raised-button type="submit">Salvar</button>
+    
+        <div class="actions">
+          
+        </div>
+      </form>
+    </div>
+    
