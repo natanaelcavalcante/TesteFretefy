@@ -39,7 +39,7 @@ export class RegiaoCadastroComponent implements OnInit {
             this.carregarRegiaoParaEdicao(id);
         }
     });
-}
+  }
 
   carregarCidades() {
     
@@ -55,8 +55,7 @@ export class RegiaoCadastroComponent implements OnInit {
 
   novaCidade(): FormGroup {
     return this.fb.group({
-      cidade: ['', Validators.required],
-      uf: ['', Validators.required]
+      cidadeId: ['', Validators.required] 
     });
   }
 
@@ -74,9 +73,11 @@ export class RegiaoCadastroComponent implements OnInit {
         if (regiao) {
           this.regiaoForm.patchValue({
             nome: regiao.nome,
+            ativo: regiao.ativo
           });
+  
           const cidadeFormGroups = regiao.regiaoCidade.map(rc => this.fb.group({
-            cidade: rc.cidadeId
+            cidadeId: rc.cidadeId
           }));
           const cidadeFormArray = this.fb.array(cidadeFormGroups);
           this.regiaoForm.setControl('cidades', cidadeFormArray);
@@ -86,23 +87,21 @@ export class RegiaoCadastroComponent implements OnInit {
       },
       error => console.error(error)
     );
-  } 
+  }
   
-
   onSubmit(event: Event) {
     event.preventDefault();
-
     if (this.regiaoForm.valid) {
         const formValue = this.regiaoForm.value;
-
-        const regiaoData: Regiao = {
+  
+        let regiaoData: any = { 
             nome: formValue.nome,
-            ativo: true, 
-            regiaoCidade: formValue.cidades.map(cidade => ({ cidadeId: cidade.cidade }))  
+            ativo: true,
+            cidadesId: formValue.cidades.map(c => c.cidadeId),
+            id: this.regiaoId
         };
-
+  
         if (this.isEditMode) {
-            regiaoData.id = this.regiaoId; 
             this.updateRegiao(regiaoData);
         } else {
             this.createRegiao(regiaoData);
@@ -110,22 +109,19 @@ export class RegiaoCadastroComponent implements OnInit {
     } else {
         console.error('Formulário inválido');
     }
-}
+  }   
 
- 
-    
-
-createRegiao(regiao: Regiao) {
-  this.regiaoService.createRegiao(regiao).subscribe({
-      next: () => {
-          console.log('Região criada com sucesso.');
-          this.router.navigate(['/regiao']);
-      },
-      error: (error) => {
-          console.error('Erro ao criar a região:', error);
-      }
-  });
-}
+  createRegiao(regiao: Regiao) {
+    this.regiaoService.createRegiao(regiao).subscribe({
+        next: () => {
+            console.log('Região criada com sucesso.');
+            this.router.navigate(['/regiao']);
+        },
+        error: (error) => {
+            console.error('Erro ao criar a região:', error);
+        }
+    });
+  }
 
   updateRegiao(regiao: Regiao) {
     console.log('Updating regiao:', regiao);

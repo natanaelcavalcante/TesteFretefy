@@ -7,6 +7,6 @@ public class RegiaoUpdateDTO
     public Guid Id { get; set; }
     public string Nome { get; set; }
     public bool Ativo { get; set; }
-    public List<Guid> CidadesIds { get; set; }
+    public List<Guid> CidadesId { get; set; }
 }
 

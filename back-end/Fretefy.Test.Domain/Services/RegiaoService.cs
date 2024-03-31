@@ -69,7 +69,8 @@ namespace Fretefy.Test.Domain.Services
 
             return await _regiaoRepository.CreateAsync(regiao);
         }
-        public async Task<bool> UpdateAsync(Regiao regiao, IEnumerable<Guid> cidadesIds)
+
+        public async Task<bool> UpdateAsync(Regiao regiao, IEnumerable<Guid> novasCidadesIds)
         {
             var existingRegiao = await _regiaoRepository.GetByIdAsync(regiao.Id);
             if (existingRegiao == null)
@@ -79,10 +80,10 @@ namespace Fretefy.Test.Domain.Services
 
             existingRegiao.Nome = regiao.Nome;
             existingRegiao.Ativo = regiao.Ativo;
-
-            // Atualize a lista de cidades da região
-            return await _regiaoRepository.UpdateAsync(existingRegiao, cidadesIds);
+            return await _regiaoRepository.UpdateAsync(existingRegiao, novasCidadesIds);
         }
+
+
 
         public async Task<bool> ToggleActiveAsync(Guid id)
         {

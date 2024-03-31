@@ -75,21 +75,19 @@ namespace Fretefy.Test.WebApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(Guid id, [FromBody] RegiaoUpdateDTO regiaoUpdateDto)
         {
-            if (regiaoUpdateDto == null || id != regiaoUpdateDto.Id)
+            if (regiaoUpdateDto == null || id != regiaoUpdateDto.Id || !regiaoUpdateDto.CidadesId.Any())
             {
                 return BadRequest("Dados inválidos.");
             }
 
-            var regiao = await _regiaoService.GetByIdAsync(id);
-            if (regiao == null)
+            var regiao = new Regiao
             {
-                return NotFound("Região não encontrada.");
-            }
+                Id = regiaoUpdateDto.Id,
+                Nome = regiaoUpdateDto.Nome,
+                Ativo = regiaoUpdateDto.Ativo
+            };
 
-            regiao.Nome = regiaoUpdateDto.Nome;
-            regiao.Ativo = regiaoUpdateDto.Ativo;
-
-            var updated = await _regiaoService.UpdateAsync(regiao, regiaoUpdateDto.CidadesIds);
+            var updated = await _regiaoService.UpdateAsync(regiao, regiaoUpdateDto.CidadesId);
             if (!updated)
             {
                 return BadRequest("Não foi possível atualizar a região.");
@@ -97,6 +95,7 @@ namespace Fretefy.Test.WebApi.Controllers
 
             return NoContent();
         }
+
 
 
         [HttpPut("{id}/toggle-active")]

@@ -1,6 +1,7 @@
 using Fretefy.Test.Domain.Entities;
 using Fretefy.Test.Domain.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,10 +12,12 @@ namespace Fretefy.Test.Infra.EntityFramework.Repositories
     public class RegiaoRepository : IRegiaoRepository
     {
         private readonly DbContext _context;
+        private readonly ILogger<RegiaoRepository> _logger;
 
-        public RegiaoRepository(TestDbContext context)
+        public RegiaoRepository(TestDbContext context, ILogger<RegiaoRepository> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<Regiao>> ListAsync()
@@ -55,35 +58,43 @@ namespace Fretefy.Test.Infra.EntityFramework.Repositories
 
         public async Task<bool> UpdateAsync(Regiao regiao, IEnumerable<Guid> cidadesIds)
         {
-            var transaction = await _context.Database.BeginTransactionAsync();
-
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                var regiaoExistente = await _context.Set<Regiao>().FindAsync(regiao.Id);
+                var regiaoExistente = await _context.Set<Regiao>()
+                    .Include(r => r.RegiaoCidade)
+                    .FirstOrDefaultAsync(r => r.Id == regiao.Id);
+
                 if (regiaoExistente == null)
                 {
                     throw new Exception("Região não encontrada.");
                 }
 
+                // Atualiza as propriedades da região
                 regiaoExistente.Nome = regiao.Nome;
                 regiaoExistente.Ativo = regiao.Ativo;
-                _context.Set<Regiao>().Update(regiaoExistente);
 
-                cidadesIds ??= Enumerable.Empty<Guid>();
+                var existingCidadesIds = regiaoExistente.RegiaoCidade.Select(rc => rc.CidadeId).ToList();
 
-                var regiaoCidadesAtuais = _context.Set<RegiaoCidade>().Where(rc => rc.RegiaoId == regiao.Id).ToList();
+                var cidadesParaRemover = regiaoExistente.RegiaoCidade
+                    .Where(rc => !cidadesIds.Contains(rc.CidadeId))
+                    .ToList();
 
-                var cidadesParaRemover = regiaoCidadesAtuais.Where(rc => !cidadesIds.Contains(rc.CidadeId)).ToList();
-                _context.Set<RegiaoCidade>().RemoveRange(cidadesParaRemover);
-
-                var cidadesAtuaisIds = regiaoCidadesAtuais.Select(rc => rc.CidadeId);
-                var cidadesParaAdicionarIds = cidadesIds.Except(cidadesAtuaisIds);
-                foreach (var cidadeId in cidadesParaAdicionarIds)
+                foreach (var regiaoCidade in cidadesParaRemover)
                 {
-                    var novaRegiaoCidade = new RegiaoCidade { RegiaoId = regiao.Id, CidadeId = cidadeId };
-                    await _context.Set<RegiaoCidade>().AddAsync(novaRegiaoCidade);
+                    _context.Set<RegiaoCidade>().Remove(regiaoCidade);
                 }
 
+                var cidadesParaAdicionar = cidadesIds
+                    .Except(existingCidadesIds)
+                    .Select(cid => new RegiaoCidade { RegiaoId = regiaoExistente.Id, CidadeId = cid });
+
+                foreach (var regiaoCidade in cidadesParaAdicionar)
+                {
+                    regiaoExistente.RegiaoCidade.Add(regiaoCidade);
+                }
+
+                _context.Set<Regiao>().Update(regiaoExistente);
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
@@ -95,6 +106,7 @@ namespace Fretefy.Test.Infra.EntityFramework.Repositories
                 throw;
             }
         }
+
 
 
     }

@@ -1,8 +1,7 @@
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Component, OnInit, ViewChild} from '@angular/core';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { RegiaoService } from '../../services/regiao.service';
 import { Regiao } from '../../model/regiao.model';
 
@@ -12,10 +11,9 @@ import { Regiao } from '../../model/regiao.model';
   styleUrls: ['./regiao.component.scss']
 })
 export class RegiaoComponent implements OnInit {
-  @ViewChild(MatSort, { static: true }) sort: MatSort;
   regioes$: Observable<Regiao[]>;
-  colunasExibidas = ['nome', 'status', 'acoes'];
-  dataSource: MatTableDataSource<Regiao>;
+  sortedColumn: string = '';
+  sortOrder: 'asc' | 'desc' = 'asc';
 
   constructor(private regiaoService: RegiaoService, private router: Router) {}
 
@@ -23,44 +21,51 @@ export class RegiaoComponent implements OnInit {
     this.loadRegioes();
   }
 
+  navegarParaCadastro() {
+    this.router.navigate(['/regiao/cadastrar']);
+  }
+
   editarRegiao(regiao: Regiao) {
     this.router.navigate(['/regiao/editar', regiao.id]);
   }
 
-  visualizarRegiao(regiao: Regiao) {
-    this.router.navigate(['/regiao/visualizar', regiao.id]);
-  }
-
-  navegarParaCadastro() {
-    this.router.navigate(['/regiao/cadastrar'])
+  toggleAtivo(regiao: Regiao) {
+    this.regiaoService.toggleAtivo(regiao).subscribe({
+      next: () => this.loadRegioes(),
+      error: (error) => console.error('Erro ao alterar o status da região:', error)
+    });
   }
 
   loadRegioes() {
-    this.regioes$ = this.regiaoService.getRegioes();
-    this.regioes$.subscribe((data) => {
-      this.dataSource = new MatTableDataSource(data);
-      this.dataSource.sort = this.sort;
+    this.regioes$ = this.regiaoService.getRegioes()
+      .pipe(
+        map(regioes => this.sort(regioes, this.sortedColumn, this.sortOrder))
+      );
+  }
+
+  onColumnHeaderClick(columnName: string) {
+    if (this.sortedColumn === columnName) {
+      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortedColumn = columnName;
+      this.sortOrder = 'asc';
+    }
+    this.loadRegioes();
+  }
+
+  sort(regioes: Regiao[], column: string, order: 'asc' | 'desc'): Regiao[] {
+    if (!column) return regioes; // No sorting if no column set
+    return [...regioes].sort((a, b) => {
+      const valA = a[column];
+      const valB = b[column];
+
+      if (valA < valB) {
+        return order === 'asc' ? -1 : 1;
+      }
+      if (valA > valB) {
+        return order === 'asc' ? 1 : -1;
+      }
+      return 0;
     });
-  } 
-
-  toggleAtivo(regiao: Regiao) {
-    this.regiaoService.toggleAtivo(regiao).subscribe({
-        next: (response) => {
-            this.dataSource.data = this.dataSource.data.map(r => {
-                if (r.id === regiao.id) {
-                    return { ...r, ativo: !r.ativo };
-                }
-                return r;
-            });
-            this.dataSource._updateChangeSubscription(); 
-        },
-        error: (error) => {
-            console.error('Erro ao alterar o status da região:', error);
-        }
-    });
-}
-
-
-   
-
+  }
 }
