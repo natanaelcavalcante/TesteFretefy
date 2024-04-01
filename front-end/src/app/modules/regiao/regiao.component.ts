@@ -54,7 +54,7 @@ export class RegiaoComponent implements OnInit {
   }
 
   sort(regioes: Regiao[], column: string, order: 'asc' | 'desc'): Regiao[] {
-    if (!column) return regioes; // No sorting if no column set
+    if (!column) return regioes; 
     return [...regioes].sort((a, b) => {
       const valA = a[column];
       const valB = b[column];

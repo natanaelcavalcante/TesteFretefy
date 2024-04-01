@@ -7,10 +7,10 @@ import { RouterModule } from '@angular/router';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ReactiveFormsModule } from '@angular/forms';
 
-// Importar módulos específicos da aplicação
+
 import { HomeModule } from './modules/home/home.module';
 import { ToolbarModule } from './components/toolbar/toolbar.module';
-import { RegiaoModule } from './modules/regiao/regiao.module'; // Certifique-se de que este módulo está importado corretamente
+import { RegiaoModule } from './modules/regiao/regiao.module'; 
 
 @NgModule({
   declarations: [
@@ -22,7 +22,7 @@ import { RegiaoModule } from './modules/regiao/regiao.module'; // Certifique-se 
     HttpClientModule,
     HomeModule,
     ToolbarModule,
-    RegiaoModule, // Importe o RegiaoModule aqui
+    RegiaoModule, 
     ReactiveFormsModule,
     AppRoutingModule,
     BrowserAnimationsModule

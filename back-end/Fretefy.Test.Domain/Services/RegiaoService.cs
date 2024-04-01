@@ -83,8 +83,6 @@ namespace Fretefy.Test.Domain.Services
             return await _regiaoRepository.UpdateAsync(existingRegiao, novasCidadesIds);
         }
 
-
-
         public async Task<bool> ToggleActiveAsync(Guid id)
         {
             var regiao = await _regiaoRepository.GetByIdAsync(id);
@@ -94,8 +92,6 @@ namespace Fretefy.Test.Domain.Services
             }
 
             regiao.Ativo = !regiao.Ativo;
-
-            // Obter os IDs das cidades antes de chamar UpdateAsync
             var cidadesIds = regiao.RegiaoCidade.Select(rc => rc.CidadeId);
 
             await _regiaoRepository.UpdateAsync(regiao, cidadesIds);

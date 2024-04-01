@@ -5,16 +5,20 @@ import { RegiaoService } from '../../../services/regiao.service';
 import { CidadeService } from '../../../services/cidade.service';
 import { Regiao } from '../../../model/regiao.model';
 
+declare var bootstrap: any;
+
 @Component({
   selector: 'app-regiao-cadastro',
   templateUrl: './regiao-cadastro.component.html',
   styleUrls: ['./regiao-cadastro.component.scss']
 })
+
 export class RegiaoCadastroComponent implements OnInit {
   regiaoForm: FormGroup;
   cidadesList: any[] = [];
   isEditMode: boolean = false;
   regiaoId: string;
+  errorMessage: string = '';
 
   constructor(
     private fb: FormBuilder,
@@ -91,13 +95,20 @@ export class RegiaoCadastroComponent implements OnInit {
   
   onSubmit(event: Event) {
     event.preventDefault();
-    if (this.regiaoForm.valid) {
-        const formValue = this.regiaoForm.value;
   
+    const formValue = this.regiaoForm.value;
+    const cidadesId = formValue.cidades.map(c => c.cidadeId);  
+    
+    if (!cidadesId.length || cidadesId.every(id => id === null || id === '')) {
+      this.showErrorModal('É obrigatório informar ao menos uma cidade.');
+      return;
+    }
+  
+    if (this.regiaoForm.valid) {
         let regiaoData: any = { 
             nome: formValue.nome,
             ativo: true,
-            cidadesId: formValue.cidades.map(c => c.cidadeId),
+            cidadesId: cidadesId,
             id: this.regiaoId
         };
   
@@ -108,23 +119,32 @@ export class RegiaoCadastroComponent implements OnInit {
         }
     } else {
         console.error('Formulário inválido');
+        this.showErrorModal('Existem erros de validação no formulário.');
     }
-  }   
+  }
+  
+  
+  showErrorModal(error: string) {
+    this.errorMessage = error;
+    const modalElement = document.getElementById('errorModal');
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+  }
 
   createRegiao(regiao: Regiao) {
     this.regiaoService.createRegiao(regiao).subscribe({
-        next: () => {
-            console.log('Região criada com sucesso.');
-            this.router.navigate(['/regiao']);
-        },
-        error: (error) => {
-            console.error('Erro ao criar a região:', error);
-        }
+      next: () => {
+        console.log('Região criada com sucesso.');
+        this.router.navigate(['/regiao']);
+      },
+      error: (error) => {
+        console.error('Erro ao criar a região:', error);
+        this.showErrorModal(error.error);
+      }
     });
   }
 
   updateRegiao(regiao: Regiao) {
-    console.log('Updating regiao:', regiao);
     this.regiaoService.updateRegiao(regiao).subscribe({
       next: (response) => {
         console.log('Região atualizada:', response);
@@ -132,6 +152,7 @@ export class RegiaoCadastroComponent implements OnInit {
       },
       error: (error) => {
         console.error('Erro ao atualizar região:', error);
+        this.showErrorModal(error.error);
       }
     });
   }
